@@ -14,20 +14,24 @@ from PyQt5.QtWidgets import(
 
 def movefiles(sourcedir,destdir,count,convention):
     alldestinations = []
-
-    for d in os.listdir(destdir):
-        if os.path.isdir(os.path.join(destdir, d)):
-            alldestinations.append(d)
+    alldestpaths = []
+    unfound = []
+    for dirpath, dirnames, files in os.walk(destdir):
+        if os.path.isdir(os.path.join(dirpath)):
+            alldestpaths.append(dirpath)
+            alldestinations.append(os.path.basename(dirpath))
 
     for file in os.listdir(sourcedir):
         standard = file[0:count]
         foldername = standard+convention
         if foldername in alldestinations:
-            shutil.copy(os.path.join(sourcedir, file), os.path.join(destdir, foldername, file))
+            print(f"Moving {file} to {foldername}")
+            shutil.copy(os.path.join(sourcedir, file), alldestpaths[alldestinations.index(foldername)])
         else:
-            os.mkdir(os.path.join(destdir, foldername))
-            alldestinations.append(foldername)
-            shutil.copy(os.path.join(sourcedir, file), os.path.join(destdir, foldername, file))
+            print(f"Destination folder for {file} not found")
+            unfound.append(file)
+
+    return unfound
 
 class Window(QWidget):
     def __init__(self):
@@ -49,8 +53,18 @@ class Window(QWidget):
             self.dest = QFileDialog.getExistingDirectory(self, 'Select Destination Folder')
 
         def move():
-            movefiles(self.source, self.dest, int(get_count.text()), get_convention.text())
-            exit(0)
+            unfound = movefiles(self.source, self.dest, int(get_count.text()), get_convention.text())
+
+            if len(unfound) > 0:
+                errorlabel = QLabel()
+                errorlabel.setText('The following files corresponding folders were not found:')
+                layout.addRow(errorlabel)
+                for i in unfound:
+                    filelabel = QLabel()
+                    filelabel.setText(i)
+                    layout.addRow(filelabel)
+            else:
+                exit(0)
         
         sourcelayout = QHBoxLayout()
         sourcebtn = QPushButton()
@@ -90,7 +104,7 @@ class Window(QWidget):
         layout.addRow(finishbtn)
 
         return layout
-    
+
 if __name__=='__main__':
     app = QApplication([])
     window = Window()
