@@ -10,13 +10,20 @@ from PyQt5.QtWidgets import(
      QPushButton,
      QLineEdit,
      QLabel,
+     QCheckBox,
 )
 
-def movefiles(sourcedir,destdir,count,convention):
+def movefiles(sourcedir,destdir,count,convention, excn5, excomezarr):
     alldestinations = []
     alldestpaths = []
     unfound = []
-    for dirpath, dirnames, files in os.walk(destdir):
+    exclude = []
+    if excn5:
+        exclude.append('.n5')
+    if excomezarr:
+        exclude.append('.ome.zarr')
+    for dirpath, dirnames, files in os.walk(destdir, topdown=True):
+        dirnames[:] = [d for d in dirnames if d not in exclude]
         if os.path.isdir(os.path.join(dirpath)):
             print(f"Found {dirpath}")
             alldestpaths.append(dirpath)
@@ -50,6 +57,8 @@ class Window(QWidget):
 
     def mainwindow(self):
         layout = QFormLayout()
+        excn5 = True
+        excomezarr = True
 
         def selectsourcefolder():
             self.source = QFileDialog.getExistingDirectory(self, 'Select Source Folder')
@@ -57,8 +66,20 @@ class Window(QWidget):
         def selectdestfolder():
             self.dest = QFileDialog.getExistingDirectory(self, 'Select Destination Folder')
 
+        def checkn5(self):
+            if excn5check.isChecked():
+                excn5 = True
+            else:
+                excn5 = False
+
+        def checkomezarr(self):
+            if excomezarrcheck.isChecked():
+                excomezarr = True
+            else:
+                excomezarr = False
+
         def move():
-            unfound = movefiles(self.source, self.dest, int(get_count.text()), get_convention.text())
+            unfound = movefiles(self.source, self.dest, int(get_count.text()), get_convention.text(), excn5, excomezarr)
 
             if len(unfound) > 0:
                 errorlabel = QLabel()
@@ -98,6 +119,16 @@ class Window(QWidget):
         get_count = QLineEdit()
         get_convention = QLineEdit()
 
+        checklayout = QHBoxLayout()
+        excn5check = QCheckBox(text='Exclude n5 files?')
+        excn5check.setChecked(True)
+        excn5check.stateChanged.connect(checkn5)
+        checklayout.addWidget(excn5check)
+        excomezarrcheck = QCheckBox(text='Exclude ome-zarr files?')
+        excomezarrcheck.setChecked(True)
+        excomezarrcheck.stateChanged.connect(checkomezarr)
+        checklayout.addWidget(excomezarrcheck)
+
         finishbtn = QPushButton()
         finishbtn.setText('Move Files')
         finishbtn.clicked.connect(move)
@@ -106,6 +137,7 @@ class Window(QWidget):
         layout.addRow("Select destination folder", destbtn)
         layout.addRow("No. of similar chars between file and destination name:",get_count)
         layout.addRow("Destination name after the similar chars:",get_convention)
+        layout.addRow(checklayout)
         layout.addRow(finishbtn)
 
         return layout
