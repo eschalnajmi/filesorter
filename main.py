@@ -18,6 +18,7 @@ def movefiles(sourcedir,destdir,count,convention):
     unfound = []
     for dirpath, dirnames, files in os.walk(destdir):
         if os.path.isdir(os.path.join(dirpath)):
+            print(f"Found {dirpath}")
             alldestpaths.append(dirpath)
             alldestinations.append(os.path.basename(dirpath))
 
