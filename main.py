@@ -27,6 +27,10 @@ def movefiles(sourcedir,destdir,count,convention):
         foldername = standard+convention
         if foldername in alldestinations:
             print(f"Moving {file} to {foldername}")
+            if os.path.exists(os.path.join(alldestpaths[alldestinations.index(foldername)], file)):
+                shutil.copy(os.path.join(sourcedir, file), os.path.join(sourcedir, file.split(".")[0]+'_copy'+ file.strip(file.split(".")[0])+file[-1]))
+                shutil.copy(os.path.join(sourcedir, file.split(".")[0]+'_copy'+ file.strip(file.split(".")[0])+file[-1]), alldestpaths[alldestinations.index(foldername)])
+                continue
             shutil.copy(os.path.join(sourcedir, file), alldestpaths[alldestinations.index(foldername)])
         else:
             print(f"Destination folder for {file} not found")
